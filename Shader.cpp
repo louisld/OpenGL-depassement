@@ -82,16 +82,7 @@ bool Shader::charger()
     glAttachShader(m_programShader, m_vertexShader);
     glAttachShader(m_programShader, m_fragmentShader);
     glLinkProgram(m_programShader);
-    int success;
-    char infoLog[512];
-    glGetProgramiv(m_programShader, GL_LINK_STATUS, &success);
-    if(!success)
-    {
-      glGetShaderInfoLog(m_programShader, 512, NULL, infoLog);
-      std::cout << "Error::Shader::Program::Linking_Failed" << infoLog << std::endl;
-      glDeleteProgram(m_programShader);
-      return false;
-    }
+    checkCompileErrors(m_programShader, "PROGRAM");
     glDeleteShader(m_vertexShader);
     glDeleteShader(m_fragmentShader);
 
@@ -101,12 +92,12 @@ bool Shader::charger()
 
 bool Shader::compilerShader(GLuint &shader, GLenum type, std::string const &fichierSource)
 {
-    // Cr�ation du shader
+    // Création du shader
 
     shader = glCreateShader(type);
 
 
-    // V�rification du shader
+    // Vérification du shader
 
     if(shader == 0)
     {
@@ -150,21 +141,36 @@ bool Shader::compilerShader(GLuint &shader, GLenum type, std::string const &fich
 
     glShaderSource(shader, 1, &chaineCodeSource, NULL);
     glCompileShader(shader);
-    int success;
-    char infoLog[512];
+    //std::cout << glGetError() << std::endl;
+    if(type == GL_FRAGMENT_SHADER)
+      checkCompileErrors(shader, "FRAGMENT");
+    else
+      checkCompileErrors(shader, "VERTEX");
+
+    return true;
+}
+
+void Shader::checkCompileErrors(unsigned int shader, std::string type)
+{
+  int success;
+  char infoLog[1024];
+  if(type != "PROGRAM")
+  {
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
     if(!success)
     {
-      glGetShaderInfoLog(m_vertexShader, 512, NULL, infoLog);
+      glGetShaderInfoLog(shader, 1024, NULL, infoLog);
       std::cout << "Error::Shader::" << type << "::Compilation_Failed" << infoLog << std::endl;
-      glDeleteShader(shader);
-      return false;
     }
-
-    else
-        return true;
+  }else{
+    glGetProgramiv(shader, GL_LINK_STATUS, &success);
+    if(!success)
+    {
+      glGetShaderInfoLog(shader, 1024, NULL, infoLog);
+      std::cout << "Error::Shader::Program::Linking_Failed" << infoLog << std::endl;
+    }
+  }
 }
-
 
 // Getter
 

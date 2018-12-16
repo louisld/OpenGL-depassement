@@ -5,7 +5,7 @@ EXEC=depassement
 
 all: $(EXEC)
 
-depassement: depassement.o SceneOpenGL.o Shader.o
+depassement:SceneOpenGL.o Shader.o  depassement.o
 	$(CXX) -o depassement SceneOpenGL.o depassement.o Shader.o $(LDFLAGS)
 
 SceneOpenGL.o: SceneOpenGL.cpp Shader.h
@@ -14,8 +14,8 @@ SceneOpenGL.o: SceneOpenGL.cpp Shader.h
 Shader.o: Shader.cpp
 	$(CXX) -o  Shader.o -c Shader.cpp $(CXXFLAGS)
 
-depassement.o: depassement.cpp SceneOpenGL.h
-	$(CXX) -o depassement.o depassement.cpp $(CXXFLAGS)
+depassement.o: depassement.cpp SceneOpenGL.h Shader.h
+	$(CXX) -o depassement.o -c depassement.cpp $(CXXFLAGS)
 
 clean:
 	rm -rf *o

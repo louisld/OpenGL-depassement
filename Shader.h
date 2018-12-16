@@ -29,6 +29,7 @@ class Shader
     bool charger();
     bool compilerShader(GLuint &shader, GLenum type, std::string const &fichierSource);
     GLuint getProgramID() const;
+    void checkCompileErrors(unsigned int shader, std::string type);
 
 
     private:
