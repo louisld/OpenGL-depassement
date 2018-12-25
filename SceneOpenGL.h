@@ -12,6 +12,8 @@
 #define GL3_PROTOTYPES 1
 #include <GL/gl.h>
 
+#include "Input.h"
+
 
 // Classe
 
@@ -36,6 +38,10 @@ class SceneOpenGL
     SDL_Window* m_fenetre;
     SDL_GLContext m_contexteOpenGL;
     SDL_Event m_evenements;
+
+    Input m_input;
+
+    bool handleEvent(float deltaTime);
 };
 
 #endif

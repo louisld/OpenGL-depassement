@@ -1,9 +1,17 @@
 #include "SceneOpenGL.h"
 #include "Shader.h"
+#include "Camera.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "Utils/stb_image.h"
 
-SceneOpenGL::SceneOpenGL(std::string titreFenetre, int largeurFenetre, int hauteurFenetre) : m_titreFenetre(titreFenetre), m_largeurFenetre(largeurFenetre), m_hauteurFenetre(hauteurFenetre), m_fenetre(0), m_contexteOpenGL(0)
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+
+SceneOpenGL::SceneOpenGL(std::string titreFenetre, int largeurFenetre, int hauteurFenetre) : m_titreFenetre(titreFenetre), m_largeurFenetre(largeurFenetre), m_hauteurFenetre(hauteurFenetre), m_fenetre(0), m_contexteOpenGL(0), m_input()
 {
 
 }
@@ -108,17 +116,54 @@ bool SceneOpenGL::initGL()
 
 void SceneOpenGL::bouclePrincipale()
 {
-  // Variables
-
-  bool terminer(false);
 
   //Variables
+
+
   float vertices[] = {
-    0.5f, 0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  1.0f, 1.0f,
-    0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  1.0f, 0.0f,
-    -0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  0.0f, 0.0f,
-    -0.5f, 0.5f, 0.0f,  1.0f, 1.0f, 0.0f,  0.0f, 1.0f
+    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+    0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+    0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+    0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+    0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+    0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+    0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+    0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+    0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
   };
+
 
   float couleurs[] = {
     1.0, 0.0, 0.0,
@@ -130,27 +175,26 @@ void SceneOpenGL::bouclePrincipale()
     0, 1, 3,
     1, 2, 3
   };
+
+  glEnable(GL_DEPTH_TEST);
   unsigned int VBO, VAO, EBO;
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
-  glGenBuffers(1, &EBO);
+  //glGenBuffers(1, &EBO);
 
   glBindVertexArray(VAO);
 
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+  //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
 
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
-
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-  glEnableVertexAttribArray(2);
 
   Shader shader = Shader("Shaders/1.vert", "Shaders/1.frag");
   shader.charger();
@@ -180,15 +224,21 @@ void SceneOpenGL::bouclePrincipale()
   //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
   int frames = 0;
+  float deltaTime;
+  float lastFrame;
 
-  while(!terminer)
+  m_input.afficherPointeur(false);
+  m_input.capturerPointeur(true);
+
+  while(!m_input.terminer())
   {
-    // Gestion des évènements
 
-    SDL_PollEvent(&m_evenements);
+    float currentFrame = SDL_GetTicks();
+    deltaTime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
 
-    if(m_evenements.window.event == SDL_WINDOWEVENT_CLOSE)
-    terminer = true;
+    if(handleEvent(deltaTime))
+      break;
 
     // Nettoyage de l'écran
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -196,11 +246,23 @@ void SceneOpenGL::bouclePrincipale()
 
     glBindTexture(GL_TEXTURE_2D, texture);
 
-    glUseProgram(shaderProgram);
+    glm::mat4 model(1.0f);
+    model = glm::rotate(model, (float) SDL_GetTicks() * glm::radians(2.0f) / 50.0f, glm::vec3(0.5f, 1.0f, 0.2f));
+
+    glm::mat4 projection(1.0f);
+    projection = glm::perspective(glm::radians(45.0f), (float) m_largeurFenetre / (float) m_hauteurFenetre, 0.1f, 100.0f);
+
+    glm::mat4 view = camera.GetViewMatrix();
+
+    shader.use();
+    shader.setMat4("model", model);
+    shader.setMat4("view", view);
+    shader.setMat4("projection", projection);
 
     glBindVertexArray(VAO);
 
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    //glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
     //std::cout << "Frame n°" << frames << " : " <<  glGetError() << std::endl;frames++;
 
     // Actualisation de la fenêtre
@@ -210,4 +272,23 @@ void SceneOpenGL::bouclePrincipale()
   glDeleteVertexArrays(1, &VAO);
   glDeleteBuffers(1, &VBO);
   glDeleteBuffers(1, &EBO);
+}
+
+bool SceneOpenGL::handleEvent(float deltaTime)
+{
+  m_input.updateEvenements();
+  if(m_input.getTouche(SDL_SCANCODE_W))
+    camera.ProcessKeyboard(FORWARD, deltaTime);
+  if(m_input.getTouche(SDL_SCANCODE_S))
+    camera.ProcessKeyboard(BACKWARD, deltaTime);
+  if(m_input.getTouche(SDL_SCANCODE_A))
+    camera.ProcessKeyboard(LEFT, deltaTime);
+  if(m_input.getTouche(SDL_SCANCODE_D))
+    camera.ProcessKeyboard(RIGHT, deltaTime);
+  if(m_input.getMovSouris())
+    camera.ProcessMouseMovement(m_input.getXReal(), -m_input.getYReal());
+  if(m_input.getTouche(SDL_SCANCODE_ESCAPE))
+    return 1;
+  else
+    return 0;
 }

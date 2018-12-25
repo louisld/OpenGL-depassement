@@ -172,9 +172,19 @@ void Shader::checkCompileErrors(unsigned int shader, std::string type)
   }
 }
 
+void Shader::use()
+{
+  glUseProgram(m_programShader);
+}
+
 // Getter
 
 GLuint Shader::getProgramID() const
 {
     return m_programShader;
+}
+
+void Shader::setMat4(const std::string &name, const glm::mat4 &mat) const
+{
+  glUniformMatrix4fv(glGetUniformLocation(m_programShader, name.c_str()), 1, GL_FALSE, &mat[0][0]);
 }

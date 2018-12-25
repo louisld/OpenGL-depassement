@@ -12,6 +12,9 @@
 #define GL3_PROTOTYPES 1
 #include <GL/gl.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 
 // Classe Shader
 
@@ -30,6 +33,9 @@ class Shader
     bool compilerShader(GLuint &shader, GLenum type, std::string const &fichierSource);
     GLuint getProgramID() const;
     void checkCompileErrors(unsigned int shader, std::string type);
+    void use();
+
+    void setMat4(const std::string &name, const glm::mat4 &mat) const;
 
 
     private:
