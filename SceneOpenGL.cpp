@@ -1,6 +1,7 @@
 #include "SceneOpenGL.h"
 #include "Shader.h"
 #include "Camera.h"
+#include "Caisse.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "Utils/stb_image.h"
 
@@ -164,64 +165,7 @@ void SceneOpenGL::bouclePrincipale()
     -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
   };
 
-
-  float couleurs[] = {
-    1.0, 0.0, 0.0,
-    0.0, 1.0, 0.0,
-    0.0, 0.0, 1.0
-  };
-
-  unsigned int indices[] = {
-    0, 1, 3,
-    1, 2, 3
-  };
-
   glEnable(GL_DEPTH_TEST);
-  unsigned int VBO, VAO, EBO;
-  glGenVertexArrays(1, &VAO);
-  glGenBuffers(1, &VBO);
-  //glGenBuffers(1, &EBO);
-
-  glBindVertexArray(VAO);
-
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-  glEnableVertexAttribArray(0);
-
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-  glEnableVertexAttribArray(1);
-
-  Shader shader = Shader("Shaders/1.vert", "Shaders/1.frag");
-  shader.charger();
-  int shaderProgram = shader.getProgramID();
-
-  //Chargement de l'image
-  unsigned int texture;
-  glGenTextures(1, &texture);
-  glBindTexture(GL_TEXTURE_2D, texture);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-  int width, height, nrChannels;
-  unsigned char *data = stbi_load("Textures/container.jpg", &width, &height, &nrChannels, 0);
-  if(data)
-  {
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-  }else{
-    std::cout << "Erreur lors du chargement de la texture" << std::endl;
-  }
-
-  stbi_image_free(data);
-
-  //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
   int frames = 0;
   float deltaTime;
@@ -229,6 +173,12 @@ void SceneOpenGL::bouclePrincipale()
 
   m_input.afficherPointeur(false);
   m_input.capturerPointeur(true);
+
+  glm::mat4 projection(1.0f);
+  projection = glm::perspective(glm::radians(45.0f), (float) m_largeurFenetre / (float) m_hauteurFenetre, 0.1f, 100.0f);
+
+  Caisse caisse(2.0f, "Shaders/1.vert", "Shaders/1.frag", "Textures/container.jpg");
+  caisse.charger();
 
   while(!m_input.terminer())
   {
@@ -244,34 +194,16 @@ void SceneOpenGL::bouclePrincipale()
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glBindTexture(GL_TEXTURE_2D, texture);
-
+    glm::mat4 view = camera.GetViewMatrix();
     glm::mat4 model(1.0f);
     model = glm::rotate(model, (float) SDL_GetTicks() * glm::radians(2.0f) / 50.0f, glm::vec3(0.5f, 1.0f, 0.2f));
 
-    glm::mat4 projection(1.0f);
-    projection = glm::perspective(glm::radians(45.0f), (float) m_largeurFenetre / (float) m_hauteurFenetre, 0.1f, 100.0f);
-
-    glm::mat4 view = camera.GetViewMatrix();
-
-    shader.use();
-    shader.setMat4("model", model);
-    shader.setMat4("view", view);
-    shader.setMat4("projection", projection);
-
-    glBindVertexArray(VAO);
-
-    //glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    //std::cout << "Frame n°" << frames << " : " <<  glGetError() << std::endl;frames++;
+    caisse.afficher(projection, model, view);
 
     // Actualisation de la fenêtre
     SDL_GL_SwapWindow(m_fenetre);
   }
 
-  glDeleteVertexArrays(1, &VAO);
-  glDeleteBuffers(1, &VBO);
-  glDeleteBuffers(1, &EBO);
 }
 
 bool SceneOpenGL::handleEvent(float deltaTime)
